@@ -1,0 +1,8 @@
+node_modules/
+do_not_track/
+DROP_CSV_HERE/
+archive/
+merged-pdf-label/
+pdfs-temp/
+lasership.log
+config/config.json
