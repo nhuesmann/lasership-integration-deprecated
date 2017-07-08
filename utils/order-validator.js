@@ -10,7 +10,8 @@ const propsToValidate = [
   'TELEPHONE',
   'POSTAL_CODE',
   'SHIP_DATE',
-  'WEIGHT'
+  'WEIGHT',
+  'TNT'
 ];
 
 const validate = {
@@ -23,6 +24,9 @@ const validate = {
     return zip.length === 4
       ? `0${zip}`
       : zip;
+  },
+  TNT: function(tnt) {
+    return +tnt;
   }
 };
 

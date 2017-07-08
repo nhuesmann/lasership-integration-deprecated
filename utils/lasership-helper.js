@@ -34,7 +34,7 @@ const LasershipTimes = (order) => {
  */
 const getDeliveryDate = (order) => {
   let toAddress = `${order.ADDRESS_1} ${order.ADDRESS_2}, ${order.CITY}, ${order.STATE} ${order.POSTAL_CODE}`;
-  return localDeliveryDate(toAddress, LasershipTimes(order).CPT);
+  return localDeliveryDate(toAddress, LasershipTimes(order).CPT, order.TNT);
 };
 
 /**

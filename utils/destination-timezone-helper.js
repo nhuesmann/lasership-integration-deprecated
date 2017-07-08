@@ -59,12 +59,13 @@ const getDestOffset = (address) => {
  * Calculates the local delivery date and converts to UTC.
  * @param  {string} address  The destination address.
  * @param  {string} datetime The UTC timestamp to convert.
+ * @param  {number} shipDays The number of days it will take to deliver the package.
  * @return {Promise}         A promise that returns a new UTC timestamp if resolved
  * and a new Error object if rejected.
  */
-const localDeliveryDate = (address, datetime) => {
+const localDeliveryDate = (address, datetime, shipDays) => {
   return getDestOffset(address).then(offset => {
-    return moment.utc(`${datetime.replace('Z', '')}${offset}`).add(1, 'days').format();
+    return moment.utc(`${datetime.replace('Z', '')}${offset}`).add(shipDays, 'days').format();
   });
 };
 
