@@ -8,28 +8,31 @@ const csvDir = `${rootPath}/DROP_CSV_HERE`;
 
 /**
  * Retrieves the CSV name from the drop directory.
- * @return {string} The name of the CSV.
+ * @param  {string} dir The name of the directory to check. Defaults to csvDir.
+ * @return {string}     The name of the CSV.
  */
-const getCSVName = () => {
-  return fs.readdirSync(csvDir).filter(filename => {
+const getCSVName = (dir = csvDir) => {
+  return fs.readdirSync(dir).filter(filename => {
     return filename.endsWith('.csv');
   })[0];
 };
 
 /**
  * Reads the CSV
- * @return {buffer} Buffer representing the CSV.
+ * @param  {string} dir The name of the directory to check.
+ * @return {buffer}     Buffer representing the CSV.
  */
-const getCSVData = () => {
-  return fs.readFileSync(`${csvDir}/${getCSVName()}`);
+const getCSVData = (dir) => {
+  return fs.readFileSync(`${dir}/${getCSVName(dir)}`);
 };
 
 /**
  * Converts the order lines in the CSV to an array of order objects.
+ * @param  {string} dir The name of the directory to check. Defaults to csvDir.
  * @return {array} Array of order objects.
  */
-const parseCSV = () => {
-  return parse(getCSVData(), {columns: validateHeaders});
+const parseCSV = (dir = csvDir) => {
+  return parse(getCSVData(dir), {columns: validateHeaders});
 };
 
 /**
