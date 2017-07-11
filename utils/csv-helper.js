@@ -3,36 +3,33 @@ const fs = require('fs-extra');
 const _ = require('lodash');
 const path = require('path');
 
-const rootPath = path.join(__dirname, '..');
+const rootPath = path.join(__dirname, process.env.ROOT_PATH);
 const csvDir = `${rootPath}/DROP_CSV_HERE`;
 
 /**
  * Retrieves the CSV name from the drop directory.
- * @param  {string} dir The name of the directory to check. Defaults to csvDir.
- * @return {string}     The name of the CSV.
+ * @return {string} The name of the CSV.
  */
-const getCSVName = (dir = csvDir) => {
-  return fs.readdirSync(dir).filter(filename => {
+const getCSVName = () => {
+  return fs.readdirSync(csvDir).filter(filename => {
     return filename.endsWith('.csv');
   })[0];
 };
 
 /**
- * Reads the CSV
- * @param  {string} dir The name of the directory to check.
- * @return {buffer}     Buffer representing the CSV.
+ * Reads the CSV.
+ * @return {buffer} Buffer representing the CSV.
  */
-const getCSVData = (dir) => {
-  return fs.readFileSync(`${dir}/${getCSVName(dir)}`);
+const getCSVData = () => {
+  return fs.readFileSync(`${csvDir}/${getCSVName()}`);
 };
 
 /**
  * Converts the order lines in the CSV to an array of order objects.
- * @param  {string} dir The name of the directory to check. Defaults to csvDir.
  * @return {array} Array of order objects.
  */
-const parseCSV = (dir = csvDir) => {
-  return parse(getCSVData(dir), {columns: validateHeaders});
+const parseCSV = () => {
+  return parse(getCSVData(csvDir), {columns: validateHeaders});
 };
 
 /**
@@ -40,10 +37,10 @@ const parseCSV = (dir = csvDir) => {
  * @param  {string} now Unix epoch timestamp string.
  * @return {Promise}    Fulfilled Promise if Lodash move() command is successful.
  */
-const archiveCSV = (now, dir = csvDir, root_path = rootPath) => {
-  let newDir = `${root_path}/archive/${now}`;
-  let oldFilePath = `${dir}/${getCSVName(dir)}`;
-  let fileName = _.replace(oldFilePath, `${dir}/`, '');
+const archiveCSV = (now) => {
+  let newDir = `${rootPath}/archive/${now}`;
+  let oldFilePath = `${csvDir}/${getCSVName()}`;
+  let fileName = _.replace(oldFilePath, `${csvDir}/`, '');
   let newFilePath = `${newDir}/${fileName}`;
 
   return fs.move(oldFilePath, newFilePath);

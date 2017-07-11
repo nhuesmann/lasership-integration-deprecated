@@ -1,11 +1,9 @@
-// NPM packages
 const fs = require('fs-extra');
 const _ = require('lodash');
 const PDFMerge = require('pdf-merge');
 const path = require('path');
 
-// Global variables
-const rootPath = path.join(__dirname, '../');
+const rootPath = path.join(__dirname, process.env.ROOT_PATH);
 const pdftkPath = '/usr/local/bin/pdftk';
 const tempPDFDir = `${rootPath}/pdfs-temp`;
 let mergedPDFDir = `${rootPath}/merged-pdf-label`;
@@ -57,13 +55,11 @@ const mergeLabels = (labelPaths, mergedPDFName) => {
 
     pdfMerge.merge((err, buffer) => {
       if (err) {
-        // TODO: log this
         reject(new Error(err));
       }
       // Write the merged PDF to disk
       fs.writeFile(`${mergedPDFDir}/${mergedPDFName}.pdf`, buffer, (err, data) => {
         if (err) {
-          // TODO: log this
           reject(new Error(err));
         }
         resolve(labelPaths);
