@@ -139,7 +139,7 @@ const validLsOrder = {
 		"Email": "tech@chefd.com"
 	},
 	"Reference1": "API TEST",
-	"Reference2": "",
+	"Reference2": "123456",
 	"ServiceCode": "RD",
 	"PickupType": "LaserShip",
 	"Origin": {
@@ -287,10 +287,28 @@ const invalidLsOrder = {
 
 const prepCSV = (done) => {
   const csvSource = path.join(__dirname, '/test.csv');
-  const csvDestination = path.join(__dirname, '../test-drop-csv-here/test.csv');
+  const csvDestination = path.join(__dirname, '../DROP_CSV_HERE/test.csv');
   fs.copy(csvSource, csvDestination).then(() => {
     fs.removeSync(path.join(__dirname, '../archive'));
     done();
+  });
+};
+
+const prepTempPDF = (done) => {
+  const pdfSource = path.join(__dirname, '/987654.pdf');
+  const pdfDestination = path.join(__dirname, '../pdfs-temp/987654.pdf');
+  fs.copy(pdfSource, pdfDestination).then(() => {
+    done();
+  });
+};
+
+const cleanUp = (done) => {
+  let archive = path.join(__dirname, '../archive');
+  let mergedPDF = path.join(__dirname, '../merged-pdf-label');
+  Promise.all([fs.remove(archive), fs.remove(mergedPDF)]).then(() => {
+    done();
+  }).catch(e => {
+    console.log(e);
   });
 };
 
@@ -299,8 +317,10 @@ module.exports = {
   invalidOrder,
   orderToValidate,
   matchOrder,
-  prepCSV,
   forLsOrderConstructor,
   validLsOrder,
-  invalidLsOrder
+  invalidLsOrder,
+  prepCSV,
+  prepTempPDF,
+  cleanUp
 };

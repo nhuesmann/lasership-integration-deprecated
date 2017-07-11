@@ -1,21 +1,23 @@
 require('../config/config.js');
 
-// TODO: test error catching in csv parser / archiver?
-
+const fs = require('fs-extra');
 const path = require('path');
 const chai = require('chai');
 const expect = chai.expect;
 
-const rootPath = path.join(__dirname, '../utils');
+const modulePath = path.join(__dirname, '../utils');
 
-const {OrderValidator} = require(`${rootPath}/order-validator.js`);
-const {parseCSV, archiveCSV, getCSVName} = require(`${rootPath}/csv-helper.js`);
-const {LasershipOrder, getDeliveryDate, submitOrder} = require(`${rootPath}/lasership-helper.js`);
-const {saveLabel, mergeLabels, archiveLabels} = require(`${rootPath}/label-helper.js`);
+const {OrderValidator} = require(`${modulePath}/order-validator.js`);
+const {parseCSV, archiveCSV, getCSVName} = require(`${modulePath}/csv-helper.js`);
+const {LasershipOrder, getDeliveryDate, submitOrder} = require(`${modulePath}/lasership-helper.js`);
+const {saveLabel, mergeLabels, archiveLabels} = require(`${modulePath}/label-helper.js`);
 
 const seed = require('./seed/seed.js');
 const now = Math.floor(new Date() / 1000);
-const csvDir = `${__dirname}/test-drop-csv-here`;
+const labels = [
+  `${__dirname}/pdfs-temp/123456.pdf`,
+  `${__dirname}/pdfs-temp/987654.pdf`
+];
 
 describe('Order Validator', () => {
   it('should approve orders with all required properties present', (done) => {
@@ -60,7 +62,7 @@ describe('CSV Helper', () => {
 
   describe('#getCSVName()', () => {
     it('should retrieve the correct CSV name', (done) => {
-      let name = getCSVName(csvDir);
+      let name = getCSVName();
       expect(name).to.equal('test.csv');
       done();
     });
@@ -68,7 +70,7 @@ describe('CSV Helper', () => {
 
   describe('#parseCSV()', () => {
     it('should convert the CSV order to an order object', (done) => {
-      let orders = parseCSV(csvDir);
+      let orders = parseCSV();
       expect(orders).to.be.an('array');
       expect(orders[0]).to.be.an('object');
       expect(orders[0]).to.deep.equal(seed.matchOrder);
@@ -78,10 +80,12 @@ describe('CSV Helper', () => {
 
   describe('#archiveCSV()', () => {
     it('should move the CSV from the drop directory to an archive folder', (done) => {
-      archiveCSV(now, csvDir, __dirname).then(archived => {
-        let postCSVName = getCSVName(csvDir);
+      archiveCSV(now).then(archived => {
+        let postCSVName = getCSVName();
         expect(postCSVName).to.be.undefined;
-        let archivedCSVName = getCSVName(`${__dirname}/archive/${now}`);
+        let archivedCSVName = fs.readdirSync(`${__dirname}/archive/${now}`).filter(filename => {
+          return filename.endsWith('.csv');
+        })[0];
         expect(archivedCSVName).to.equal('test.csv');
         done();
       });
@@ -164,22 +168,62 @@ describe('LaserShip Helper', () => {
 
 describe('Label Helper', () => {
 
-  // describe('#saveLabel()', () => {
-  //   it('should do something', () => {
-  //
-  //   });
-  // });
+  describe('#saveLabel()', () => {
+    it('should save the PDF to the correct directory', (done) => {
+      submitOrder(seed.validLsOrder).then(response => {
+        return saveLabel(response);
+      }).then(labelPath => {
+        expect(labelPath).to.be.a('string');
+        expect(labelPath).to.equal(
+          `${__dirname}/pdfs-temp/${seed.validLsOrder.CustomerOrderNumber}.pdf`);
+        done();
+      }).catch(e => {
+        // Should not evaluate
+        console.log(e);
+      });
+    });
+  });
 
-  // describe('#mergeLabels()', () => {
-  //   it('should do something elese', () => {
-  //
-  //   });
-  // });
+  describe('#mergeLabels()', () => {
+    before(seed.prepTempPDF);
 
-  // describe('#archiveLabels()', () => {
-  //   it('should really really do something', () => {
-  //
-  //   });
-  // });
+    it('should merge all labels in the temp directory', (done) => {
+      let merge = mergeLabels(labels, 'test');
+      expect(merge).to.be.a('promise');
+      merge.then(mergedLabels => {
+        expect(mergedLabels).to.be.an('array');
+        expect(mergedLabels).to.have.lengthOf(2);
+        let mergedPDFName = fs.readdirSync(`${__dirname}/merged-pdf-label`).filter(filename => {
+          return filename.endsWith('.pdf');
+        })[0];
+        expect(mergedPDFName).to.equal('test.pdf');
+        done();
+      }).catch(e => {
+        // Should not evaluate
+        console.log(e);
+      });
+    });
+  });
+
+  describe('#archiveLabels()', () => {
+    it('should create a new directory and move all temp PDFs to it', (done) => {
+      archiveLabels(labels, now).then(archived => {
+        let pdfsTemp = fs.readdirSync(`${__dirname}/pdfs-temp`).filter(filename => {
+          return filename.endsWith('.pdf');
+        });
+        let archivedDir = `${__dirname}/archive/${now}/label_archive`;
+        let archivedPDFs = fs.readdirSync(archivedDir).filter(filename => {
+          return filename.endsWith('.pdf');
+        });
+        expect(pdfsTemp).to.have.lengthOf(0);
+        expect(archivedPDFs).to.have.lengthOf(2);
+        done();
+      }).catch(e => {
+        console.log(e);
+      });
+    });
+  });
+
+  after(seed.cleanUp);
 
 });
