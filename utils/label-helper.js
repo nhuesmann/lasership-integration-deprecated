@@ -2,7 +2,6 @@
 const fs = require('fs-extra');
 const _ = require('lodash');
 const PDFMerge = require('pdf-merge');
-const mkdirp = require('mkdirp');
 const path = require('path');
 
 // Global variables
@@ -12,14 +11,14 @@ const tempPDFDir = `${rootPath}/pdfs-temp`;
 let mergedPDFDir = `${rootPath}/merged-pdf-label`;
 
 // Ensure the needed directories are in place
-mkdirp(tempPDFDir, (err) => {
+fs.ensureDir(tempPDFDir, (err) => {
   if (err) {
     fs.appendFile('lasership.log', 'Error creating temp PDF directory.\n', (e) => {
       if (e) console.log('Unable to append to lasership.log.');
     });
   }
 });
-mkdirp(mergedPDFDir, (err) => {
+fs.ensureDir(mergedPDFDir, (err) => {
   if (err) {
     fs.appendFile('lasership.log', 'Error creating temp PDF directory.\n', (e) => {
       if (e) console.log('Unable to append to lasership.log.');

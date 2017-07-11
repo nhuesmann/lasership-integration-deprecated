@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const _ = require('lodash');
 const path = require('path');
 
-const rootPath = path.join(__dirname, '../');
+const rootPath = path.join(__dirname, '..');
 const csvDir = `${rootPath}/DROP_CSV_HERE`;
 
 /**
@@ -40,10 +40,10 @@ const parseCSV = (dir = csvDir) => {
  * @param  {string} now Unix epoch timestamp string.
  * @return {Promise}    Fulfilled Promise if Lodash move() command is successful.
  */
-const archiveCSV = now => {
-  let newDir = `${rootPath}/archive/${now}`;
-  let oldFilePath = `${csvDir}/${getCSVName()}`;
-  let fileName = _.replace(oldFilePath, csvDir, '');
+const archiveCSV = (now, dir = csvDir, root_path = rootPath) => {
+  let newDir = `${root_path}/archive/${now}`;
+  let oldFilePath = `${dir}/${getCSVName(dir)}`;
+  let fileName = _.replace(oldFilePath, `${dir}/`, '');
   let newFilePath = `${newDir}/${fileName}`;
 
   return fs.move(oldFilePath, newFilePath);
