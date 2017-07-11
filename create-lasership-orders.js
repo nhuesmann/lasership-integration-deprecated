@@ -41,8 +41,9 @@ let createdLabels = validOrders.map(order => {
       // If errors occured, add order to invalid orders array but resolve the
       // Promise to Promise.all can proceed
 
+      // Handle rejected request promise
       // TODO: log the error in file (special error flag?)
-      order.ERRORS = e;
+      order.ERRORS = e.error ? e.error : e;
       invalidOrders.push(order);
       resolve();
     });

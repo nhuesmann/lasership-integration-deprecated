@@ -55,7 +55,7 @@ const LasershipOrder = function (order) {
     Email: "tech@chefd.com"
   };
   this.Reference1 = order.REFERENCE;
-  this.Reference2 = "";
+  this.Reference2 = order.SALES_ORDER_;
   this.ServiceCode = "RD";
   this.PickupType = "LaserShip";
   this.Origin = {
@@ -93,7 +93,7 @@ const LasershipOrder = function (order) {
     Country: order.COUNTRY,
     Phone: order.TELEPHONE,
     PhoneExtension: "",
-    Email: "Recommended@test.com",
+    Email: "",
     Payor: "",
     Instruction: order.SPECIAL_DELIVERY_INSTRUCTIONS,
     Note: "",
