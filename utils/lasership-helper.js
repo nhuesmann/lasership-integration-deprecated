@@ -1,11 +1,8 @@
-// NPM packages
 const request = require('request-promise');
 const argv = require('yargs').alias('test', 't').alias('production', 'p').argv;
 
-// Custom modules
 const {localDeliveryDate} = require('./destination-timezone-helper.js');
 
-// Global variables
 const apiId = process.env.LASERSHIP_API_ID;
 const apiKey = process.env.LASERSHIP_API_KEY;
 const testFlag = argv.t ? 1 : argv.p ? 0 : 1;

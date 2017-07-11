@@ -15,8 +15,7 @@ const getDestOffset = (address) => {
       address
     }, (err, response) => {
       if (err) {
-        console.log('Google API: Error getting geocoded address', err);
-        reject(new Error(err)); // TODO: fix error handling
+        reject(new Error(err));
       } else if (response.json.status === 'ZERO_RESULTS') {
         reject(new Error(`Address not found: ${address}`));
       } else if (response.json.status === 'OK') {
@@ -28,8 +27,7 @@ const getDestOffset = (address) => {
           timestamp: Math.floor(new Date() / 1000)
         }, (err, response) => {
           if (err) {
-            console.log('Google API: Error getting timezone', err);
-            reject(new Error(err)); // TODO: fix error handling
+            reject(new Error(err));
           } else if (response.json.status === 'ZERO_RESULTS') {
             reject(new Error(`Address not found: ${address}`));
           } else if (response.json.status === 'OK') {
