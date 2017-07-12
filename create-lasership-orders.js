@@ -54,13 +54,11 @@ Promise.all(createdLabels).then(labelsToFilter => {
   // Log the quantity of orders purchased successfully
   let orderQty = labels.length;
   let ships = orderQty === 1 ? 'shipment' : 'shipments';
-  fs.appendFile('lasership.log', `${log} ${orderQty} ${ships} purchased successfully.\n`, (err) => {
+  fs.appendFile('lasership.log', `${log} ${orderQty} of ${orders.length} shipments purchased successfully.\n`, (err) => {
     if (err) console.log('Unable to append to lasership.log.');
   });
   // Log the invalid orders that need to be re-processed
   if (invalidOrders.length > 0) {
-    // console.log(invalidOrders, true);
-    // console.log(typeof invalidOrders[0].ERRORS);
     let ordersLog = invalidOrders.map(order => {
       let order_number = order.SALES_ORDER_;
       let errors = order.ERRORS.toString();
@@ -70,7 +68,9 @@ Promise.all(createdLabels).then(labelsToFilter => {
       };
       return JSON.stringify(message);
     });
-    let logMsg = `${log} The following orders encountered errors and could not be purchased:
+    let failedQty = invalidOrders.length;
+    let failedOrd = failedQty === 1 ? 'order' : 'orders';
+    let logMsg = `${log} ${failedQty} ${failedOrd} encountered errors and could not be purchased:
       ${ordersLog}\n`;
     fs.appendFile('lasership.log', logMsg, (err) => {
       if (err) console.log('Unable to append to lasership.log.');
