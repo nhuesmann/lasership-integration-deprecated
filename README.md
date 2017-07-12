@@ -26,6 +26,8 @@ Download the repo. Create the folder `/DROP_CSV_HERE` in the project root. Creat
 }
 ```
 
+Download and install [PDFTK](https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/pdftk_server-2.02-mac_osx-10.11-setup.pkg).
+
 ## Usage
 
 Move CSV into drop folder. Then, from the console:
