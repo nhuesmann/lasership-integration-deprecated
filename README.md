@@ -6,7 +6,7 @@ station.
 
 ## Installation
 
-Download the repo. Create the folder "DROP_CSV_HERE" in the project root. Create
+Download the repo. Create the folder `/DROP_CSV_HERE` in the project root. Create
 `config.json` file in `/config` with the following format:
 
 ```json
