@@ -8,16 +8,12 @@ const expect = chai.expect;
 const modulePath = path.join(__dirname, '../utils');
 
 const {OrderValidator} = require(`${modulePath}/order-validator.js`);
-const {parseCSV, archiveCSV, getCSVName} = require(`${modulePath}/csv-helper.js`);
+const {parseCSV, archiveCSV, getCSVName, trackingCSV} = require(`${modulePath}/csv-helper.js`);
 const {LasershipOrder, getDeliveryDate, submitOrder} = require(`${modulePath}/lasership-helper.js`);
-const {saveLabel, mergeLabels, archiveLabels} = require(`${modulePath}/label-helper.js`);
+const {saveLabelAndTracking, mergeLabels, archiveLabels} = require(`${modulePath}/label-helper.js`);
 
 const seed = require('./seed/seed.js');
 const now = Math.floor(new Date() / 1000);
-const labels = [
-  `${__dirname}/pdfs-temp/123456.pdf`,
-  `${__dirname}/pdfs-temp/987654.pdf`
-];
 
 describe('Order Validator', () => {
   it('should approve orders with all required properties present', (done) => {
@@ -91,6 +87,23 @@ describe('CSV Helper', () => {
       });
     });
   });
+
+  describe('#trackingCSV()', () => {
+    it('should create a tracking CSV and return label paths', (done) => {
+      trackingCSV(seed.successfulOrders, now, 'test').then(labels => {
+        expect(labels).to.deep.equal(seed.labels);
+        let trackingCSVName = fs.readdirSync(`${__dirname}/archive/${now}`).filter(filename => {
+          return filename.endsWith('.csv');
+        })[0];
+        expect(trackingCSVName).to.equal('TRACKING-test.csv');
+        done();
+      }).catch((e) => {
+        // Should not evaluate
+        console.log(e);
+      });
+    });
+  });
+
 });
 
 describe('LaserShip Helper', () => {
@@ -168,14 +181,21 @@ describe('LaserShip Helper', () => {
 
 describe('Label Helper', () => {
 
-  describe('#saveLabel()', () => {
-    it('should save the PDF to the correct directory', (done) => {
+  describe('#saveLabelAndTracking()', () => {
+    it('should return the order number, tracking number, and label path', (done) => {
       submitOrder(seed.validLsOrder).then(response => {
-        return saveLabel(response);
-      }).then(labelPath => {
-        expect(labelPath).to.be.a('string');
-        expect(labelPath).to.equal(
-          `${__dirname}/pdfs-temp/${seed.validLsOrder.CustomerOrderNumber}.pdf`);
+        return saveLabelAndTracking(response);
+      }).then(labelAndTrackObj => {
+        let correctLabelPath = `${__dirname}/pdfs-temp/${seed.validLsOrder.CustomerOrderNumber}.pdf`;
+        expect(labelAndTrackObj).to.be.an('object');
+        expect(labelAndTrackObj).to.have.all.keys('order', 'label', 'tracking');
+        expect(labelAndTrackObj.order).to.equal(seed.validLsOrder.CustomerOrderNumber);
+        expect(labelAndTrackObj.label).to.equal(correctLabelPath);
+        expect(labelAndTrackObj.tracking).to.be.a('string');
+        let savedPDF = fs.readdirSync(`${__dirname}/pdfs-temp`).filter(filename => {
+          return filename.endsWith('.pdf');
+        })[0];
+        expect(savedPDF).to.equal(`${seed.validLsOrder.CustomerOrderNumber}.pdf`);
         done();
       }).catch(e => {
         // Should not evaluate
@@ -188,7 +208,7 @@ describe('Label Helper', () => {
     before(seed.prepTempPDF);
 
     it('should merge all labels in the temp directory', (done) => {
-      let merge = mergeLabels(labels, 'test');
+      let merge = mergeLabels(seed.labels, 'test');
       expect(merge).to.be.a('promise');
       merge.then(mergedLabels => {
         expect(mergedLabels).to.be.an('array');
@@ -207,7 +227,7 @@ describe('Label Helper', () => {
 
   describe('#archiveLabels()', () => {
     it('should create a new directory and move all temp PDFs to it', (done) => {
-      archiveLabels(labels, now).then(archived => {
+      archiveLabels(seed.labels, now).then(archived => {
         let pdfsTemp = fs.readdirSync(`${__dirname}/pdfs-temp`).filter(filename => {
           return filename.endsWith('.pdf');
         });
