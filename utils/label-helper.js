@@ -25,11 +25,13 @@ fs.ensureDir(mergedPDFDir, (err) => {
 });
 
 /**
- * Creates a pdf label from the buffer retrieved from the API response.
+ * Creates a pdf label from the buffer retrieved from the API response and retrieves
+ * the tracking number.
  * @param  {object} response The LaserShip API response.
- * @return {Promise}         Resolves the shipping label path or rejects a new Error.
+ * @return {Promise}         Resolves an object containing the order number, the
+ * shipping label path, and the tracking number or rejects a new Error.
  */
-const saveLabel = response => {
+const saveLabelAndTracking = response => {
   let res;
   try {
     res = JSON.parse(response);
@@ -38,10 +40,16 @@ const saveLabel = response => {
     return new Error(e);
   }
   let reference = res.Order.CustomerOrderNumber;
+  let tracking = res.Order.Pieces[0].LaserShipBarcode;
   let label = res.Order.Label;
   let labelBuffer = Buffer.from(label, 'base64');
+
   return fs.writeFile(`${tempPDFDir}/${reference}.pdf`, labelBuffer).then(savedPDF => {
-    return `${tempPDFDir}/${reference}.pdf`;
+    return {
+      order: reference,
+      label: `${tempPDFDir}/${reference}.pdf`,
+      tracking
+    };
   });
 };
 
@@ -57,6 +65,7 @@ const mergeLabels = (labelPaths, mergedPDFName) => {
       if (err) {
         reject(new Error(err));
       }
+
       // Write the merged PDF to disk
       fs.writeFile(`${mergedPDFDir}/${mergedPDFName}.pdf`, buffer, (err, data) => {
         if (err) {
@@ -88,7 +97,7 @@ const archiveLabels = (mergedLabels, now) => {
 };
 
 module.exports = {
-  saveLabel,
+  saveLabelAndTracking,
   mergeLabels,
   archiveLabels
 };

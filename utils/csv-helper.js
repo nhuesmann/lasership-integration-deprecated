@@ -1,4 +1,5 @@
 const parse = require('csv-parse/lib/sync');
+const stringify = require('csv-stringify');
 const fs = require('fs-extra');
 const _ = require('lodash');
 const path = require('path');
@@ -46,6 +47,46 @@ const archiveCSV = (now) => {
   return fs.move(oldFilePath, newFilePath);
 };
 
+const trackingCSV = (orders, now, csvName) => {
+  return new Promise((resolve, reject) => {
+    let archiveDir = `${rootPath}/archive/${now}`;
+    let csvInput = orders.map(order => {
+      return [order.order, order.tracking];
+    });
+    let labels = orders.map(order => {
+      return order.label;
+    });
+
+    let columns = {
+      order: 'Order',
+      tracking: 'Tracking Number'
+    };
+
+    stringify(csvInput, {
+      columns,
+      header: true
+    }, (err, output) => {
+      if (err) {
+        reject(new Error(err));
+      }
+
+      fs.ensureDir(archiveDir, (err) => {
+        if (err) {
+          fs.appendFile('lasership.log', 'Error creating archive directory.\n', (e) => {
+            if (e) console.log('Unable to append to lasership.log.');
+          });
+        }
+
+        fs.writeFile(`${archiveDir}/TRACKING-${csvName}.csv`, output).then(() => {
+          resolve(labels);
+        }).catch(e => {
+          reject(e);
+        });
+      });
+    });
+  });
+};
+
 /**
  * Converts CSV headers into valid strings usable as object properties.
  * @param  {array} headers Original column headers.
@@ -60,5 +101,6 @@ const validateHeaders = (headers) => {
 module.exports = {
   getCSVName,
   parseCSV,
-  archiveCSV
+  archiveCSV,
+  trackingCSV
 };
