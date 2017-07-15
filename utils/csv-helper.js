@@ -47,6 +47,13 @@ const archiveCSV = (now) => {
   return fs.move(oldFilePath, newFilePath);
 };
 
+/**
+ * Creates a CSV of order number and tracking number pairs.
+ * @param  {object} orders  The successful orders.
+ * @param  {string} now     Unix epoch timestamp string.
+ * @param  {string} csvName The name of the original CSV.
+ * @return {Promise}        Resolves with array of label paths, rejects new Error.
+ */
 const trackingCSV = (orders, now, csvName) => {
   return new Promise((resolve, reject) => {
     let archiveDir = `${rootPath}/archive/${now}`;
@@ -70,17 +77,45 @@ const trackingCSV = (orders, now, csvName) => {
         reject(new Error(err));
       }
 
-      fs.ensureDir(archiveDir, (err) => {
-        if (err) {
-          fs.appendFile('lasership.log', 'Error creating archive directory.\n', (e) => {
-            if (e) console.log('Unable to append to lasership.log.');
-          });
-        }
+      fs.ensureDir(archiveDir).then(() => {
+        return fs.writeFile(`${archiveDir}/TRACKING-${csvName}.csv`, output);
+      }).then(() => {
+        resolve(labels);
+      }).catch(err => {
+        fs.appendFile(`${rootPath}/lasership.log`, 'Error creating failed order CSV.\n', (e) => {
+          if (e) console.log('Unable to append to lasership.log.');
+        });
+        reject(err);
+      });
+    });
+  });
+};
 
-        fs.writeFile(`${archiveDir}/TRACKING-${csvName}.csv`, output).then(() => {
-          resolve(labels);
-        }).catch(e => {
-          reject(e);
+/**
+ * Creates a CSV containing only the failed orders.
+ * @param  {array} orders   The failed orders.
+ * @param  {string} now     Unix epoch timestamp string.
+ * @param  {string} csvName The name of the original CSV.
+ */
+const failedCSV = (orders, now, csvName) => {
+  let failedDir = `${rootPath}/archive/${now}`;
+  let columnKeys = Object.keys(orders[0]);
+  let columns = columnKeys.reduce((obj, key) => {
+    obj[key] = key;
+    return obj;
+  }, {});
+
+  stringify(orders, {
+    formatters: 'object',
+    columns,
+    header: true
+  }, (err, output) => {
+    if (err) return console.log('Could not stringify() failed CSV.');
+
+    fs.ensureDir(failedDir).then(() => {
+      fs.writeFile(`${failedDir}/FAILED_ORDERS-${csvName}.csv`, output).catch(err => {
+        fs.appendFile(`${rootPath}/lasership.log`, 'Error creating failed order CSV.\n', (e) => {
+          if (e) console.log('Unable to append to lasership.log.');
         });
       });
     });
@@ -102,5 +137,6 @@ module.exports = {
   getCSVName,
   parseCSV,
   archiveCSV,
-  trackingCSV
+  trackingCSV,
+  failedCSV
 };
