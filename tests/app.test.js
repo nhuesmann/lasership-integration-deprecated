@@ -8,7 +8,7 @@ const expect = chai.expect;
 const modulePath = path.join(__dirname, '../utils');
 
 const {OrderValidator} = require(`${modulePath}/order-validator.js`);
-const {parseCSV, archiveCSV, getCSVName, trackingCSV} = require(`${modulePath}/csv-helper.js`);
+const {parseCSV, archiveCSV, getCSVName, trackingCSV, failedCSV} = require(`${modulePath}/csv-helper.js`);
 const {LasershipOrder, getDeliveryDate, submitOrder} = require(`${modulePath}/lasership-helper.js`);
 const {saveLabelAndTracking, mergeLabels, archiveLabels} = require(`${modulePath}/label-helper.js`);
 
@@ -93,7 +93,7 @@ describe('CSV Helper', () => {
       trackingCSV(seed.successfulOrders, now, 'test').then(labels => {
         expect(labels).to.deep.equal(seed.labels);
         let trackingCSVName = fs.readdirSync(`${__dirname}/archive/${now}`).filter(filename => {
-          return filename.endsWith('.csv');
+          return filename.startsWith('TRACKING');
         })[0];
         expect(trackingCSVName).to.equal('TRACKING-test.csv');
         done();
@@ -104,6 +104,20 @@ describe('CSV Helper', () => {
     });
   });
 
+  describe('#failedCSV()', () => {
+    it('should create a CSV of failed orders that need re-submission', (done) => {
+      failedCSV([seed.invalidOrder, seed.invalidOrder], now, 'test').then(() => {
+        let failedCSVName = fs.readdirSync(`${__dirname}/archive/${now}`).filter(filename => {
+          return filename.startsWith('FAILED_ORDERS');
+        })[0];
+        expect(failedCSVName).to.equal('FAILED_ORDERS-test.csv');
+        done();
+      }).catch((e) => {
+        // Should not evaluate
+        console.log(e);
+      });
+    });
+  });
 });
 
 describe('LaserShip Helper', () => {
