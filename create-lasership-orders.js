@@ -36,7 +36,7 @@ let createdLabels = validOrders.map(order => {
       resolve(labelAndTrackObj);
     }).catch(e => {
       // If errors occured, add order to invalid orders array but resolve the
-      // Promise to Promise.all can proceed
+      // Promise so Promise.all can proceed
       order.ERRORS = e.error ? e.error : e;
       invalidOrders.push(order);
       resolve();

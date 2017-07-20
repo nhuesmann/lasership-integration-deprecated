@@ -39,7 +39,6 @@ const validate = {
 const OrderValidator = function (orders) {
   let validated = orders.map(order => {
     let orderErrors;
-    let newOrder = order;
     // loop through list of props to validate
     propsToValidate.forEach(prop => {
       // loop through order keys to find a match
@@ -49,7 +48,7 @@ const OrderValidator = function (orders) {
           let error = !value;
           // if additional tests are available, run them
           if (validate[key] && !error) {
-            newOrder[key] = validate[key](value);
+            order[key] = validate[key](value);
           }
           // if errors occurred, add to errors array
           if (error) {
@@ -63,18 +62,18 @@ const OrderValidator = function (orders) {
     });
     // If errors were found, add them to the order
     if (orderErrors) {
-      newOrder.ERRORS = `Sales Order ${order.SALES_ORDER_}:${orderErrors}`;
+      order.ERRORS = `Sales Order ${order.SALES_ORDER_}:${orderErrors}`;
     }
     // Else return the validated order
-    return newOrder;
+    return order;
   });
 
-  this.validOrders = validated.filter(newOrder => {
-    return !newOrder.ERRORS;
+  this.validOrders = validated.filter(order => {
+    return !order.ERRORS;
   });
 
-  this.invalidOrders = validated.filter(newOrder => {
-    return newOrder.ERRORS;
+  this.invalidOrders = validated.filter(order => {
+    return order.ERRORS;
   });
 };
 
