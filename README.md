@@ -21,7 +21,7 @@ Download the repo. Create the folder `/DROP_CSV_HERE` in the project root. Creat
     "GOOGLE_API_KEY": "YOUR_API_KEY_HERE",
     "LASERSHIP_API_ID": "YOUR_API_ID_HERE",
     "LASERSHIP_API_KEY": "YOUR_API_KEY_HERE",
-    "ROOT_PATH": "../"
+    "ROOT_PATH": ".."
   }
 }
 ```

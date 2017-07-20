@@ -3,9 +3,9 @@ require('./config/config.js');
 const fs = require('fs-extra');
 
 const {OrderValidator} = require('./utils/order-validator.js');
-const {parseCSV, archiveCSV, getCSVName} = require('./utils/csv-helper.js');
+const {parseCSV, archiveCSV, getCSVName, trackingCSV, failedCSV} = require('./utils/csv-helper.js');
 const {LasershipOrder, getDeliveryDate, submitOrder} = require('./utils/lasership-helper.js');
-const {saveLabel, mergeLabels, archiveLabels} = require('./utils/label-helper.js');
+const {saveLabelAndTracking, mergeLabels, archiveLabels} = require('./utils/label-helper.js');
 
 const now = Math.floor(new Date() / 1000);
 const log = `${new Date().toString()}:`;
@@ -29,11 +29,11 @@ let createdLabels = validOrders.map(order => {
       // Send the request
       return submitOrder(lsOrder);
     }).then(response => {
-      // Get the label
-      return saveLabel(response);
-    }).then(labelPath => {
-      // Resolve the promise with the PDF label path
-      resolve(labelPath);
+      // Save the label and get the tracking number
+      return saveLabelAndTracking(response);
+    }).then(labelAndTrackObj => {
+      // Resolve the promise with the label and tracking number object
+      resolve(labelAndTrackObj);
     }).catch(e => {
       // If errors occured, add order to invalid orders array but resolve the
       // Promise to Promise.all can proceed
@@ -44,31 +44,39 @@ let createdLabels = validOrders.map(order => {
   });
 });
 
-// After all labels have been created, merge and clean up
-Promise.all(createdLabels).then(labelsToFilter => {
-  console.log('Got all labels. Merging and cleaning up...');
-  let labels = labelsToFilter.filter(label => {
-    return label;
+// After all labels have been created, merge labels, create tracking CSV, and clean up
+Promise.all(createdLabels).then(ordersToFilter => {
+  let successfulOrders = ordersToFilter.filter(order => {
+    return order;
   });
 
   // Log the quantity of orders purchased successfully
-  let orderQty = labels.length;
+  let successQty = successfulOrders.length;
   let successMsg;
-  if (orderQty === orders.length) {
+  if (successQty === orders.length) {
     successMsg = 'All shipments purchased successfully.';
   } else {
-    successMsg = `${orderQty} of ${orders.length} shipments purchased successfully.`;
+    successMsg = `${successQty} of ${orders.length} shipments purchased successfully.`;
   }
   console.log(successMsg);
   fs.appendFile('lasership.log', `${log} ${successMsg}\n`, (err) => {
     if (err) console.log('Unable to append to lasership.log.');
   });
 
-  // Log the invalid orders that need to be re-processed
+  // Process any failed orders
   if (invalidOrders.length > 0) {
+    // Stringify error messages
+    invalidOrders.forEach(order => {
+      order.ERRORS = order.ERRORS.toString();
+    });
+
+    // Create CSV of failed orders to retry
+    failedCSV(invalidOrders, now, csvName);
+
+    // Log the invalid orders that need to be re-processed
     let ordersLog = invalidOrders.map(order => {
       let order_number = order.SALES_ORDER_;
-      let errors = order.ERRORS.toString();
+      let errors = order.ERRORS;
       let message = {
         order_number,
         errors
@@ -83,6 +91,12 @@ Promise.all(createdLabels).then(labelsToFilter => {
       if (err) console.log('Unable to append to lasership.log.');
     });
   }
+  console.log('Got all labels. Creating tracking CSV...');
+
+  // Create the tracking CSV
+  return trackingCSV(successfulOrders, now, csvName);
+}).then(labels => {
+  console.log('Merging labels and cleaning up...');
 
   // Merge labels
   return mergeLabels(labels, csvName);

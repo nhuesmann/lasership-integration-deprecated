@@ -285,6 +285,24 @@ const invalidLsOrder = {
 	}]
 };
 
+const successfulOrders = [
+  {
+    order: '123456',
+    label: `${path.join(__dirname, '../pdfs-temp')}/123456.pdf`,
+    tracking: '1LS7259010978124-1'
+  },
+  {
+    order: '987654',
+    label: `${path.join(__dirname, '../pdfs-temp')}/987654.pdf`,
+    tracking: '1LS7259010978136-1'
+  }
+];
+
+const labels = [
+  `${path.join(__dirname, '../pdfs-temp')}/123456.pdf`,
+  `${path.join(__dirname, '../pdfs-temp')}/987654.pdf`
+];
+
 const prepCSV = (done) => {
   const csvSource = path.join(__dirname, '/test.csv');
   const csvDestination = path.join(__dirname, '../DROP_CSV_HERE/test.csv');
@@ -320,6 +338,8 @@ module.exports = {
   forLsOrderConstructor,
   validLsOrder,
   invalidLsOrder,
+  successfulOrders,
+  labels,
   prepCSV,
   prepTempPDF,
   cleanUp
