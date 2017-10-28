@@ -63,7 +63,7 @@ const getDestOffset = (address) => {
  */
 const localDeliveryDate = (address, datetime, shipDays) => {
   return getDestOffset(address).then(offset => {
-    return moment.utc(`${datetime.replace('Z', '')}${offset}`).add(shipDays, 'days').format();
+    return moment.utc(datetime.replace('Z', offset), moment.ISO_8601).add(shipDays, 'days').format();
   });
 };
 
